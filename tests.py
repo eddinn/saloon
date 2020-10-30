@@ -1,36 +1,41 @@
+#!/usr/bin/env python
 from datetime import datetime, timedelta
 import unittest
-from app import app, db
+from app import create_app, db
 from app.models import User, Post
+from config import Config
 
 
-# noinspection PyArgumentList,PyArgumentList
+class TestConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite://'
+
+
 class UserModelCase(unittest.TestCase):
     def setUp(self):
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
+        self.app = create_app(TestConfig)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
         db.create_all()
 
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+        self.app_context.pop()
 
-    # noinspection PyArgumentList
     def test_password_hashing(self):
-        # noinspection PyArgumentList
         u = User(username='susan')
         u.set_password('cat')
         self.assertFalse(u.check_password('dog'))
         self.assertTrue(u.check_password('cat'))
 
     def test_avatar(self):
-        # noinspection PyArgumentList
         u = User(username='john', email='john@example.com')
         self.assertEqual(u.avatar(128), ('https://www.gravatar.com/avatar/'
                                          'd4c74594d841139328695756648b6bd6'
                                          '?d=identicon&s=128'))
 
     def test_follow(self):
-        # noinspection PyArgumentList
         u1 = User(username='john', email='john@example.com')
         u2 = User(username='susan', email='susan@example.com')
         db.session.add(u1)
@@ -63,13 +68,13 @@ class UserModelCase(unittest.TestCase):
 
         # create four posts
         now = datetime.utcnow()
-        p1 = Post(body="post from john", author=u1,
+        p1 = Post(clientname="Test1", clientinfo="post from john", author=u1,
                   timestamp=now + timedelta(seconds=1))
-        p2 = Post(body="post from susan", author=u2,
+        p2 = Post(clientname="Test2", clientinfo="post from susan", author=u2,
                   timestamp=now + timedelta(seconds=4))
-        p3 = Post(body="post from mary", author=u3,
+        p3 = Post(clientname="Test3", clientinfo="post from mary", author=u3,
                   timestamp=now + timedelta(seconds=3))
-        p4 = Post(body="post from david", author=u4,
+        p4 = Post(clientname="Test4", clientinfo="post from david", author=u4,
                   timestamp=now + timedelta(seconds=2))
         db.session.add_all([p1, p2, p3, p4])
         db.session.commit()
