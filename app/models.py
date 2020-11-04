@@ -19,7 +19,7 @@ class SearchableMixin(object):
         for i in range(len(ids)):
             when.append((ids[i], i))
         return cls.query.filter(cls.id.in_(ids)).order_by(
-            db.case(when, value=cls.id)), total
+            db.case(when, value=cls.id)), total  # pylint: disable=maybe-no-member
 
     @classmethod
     def before_commit(cls, session):
@@ -48,8 +48,8 @@ class SearchableMixin(object):
             add_to_index(cls.__tablename__, obj)
 
 
-db.event.listen(db.session, 'before_commit', SearchableMixin.before_commit)
-db.event.listen(db.session, 'after_commit', SearchableMixin.after_commit)
+db.event.listen(db.session, 'before_commit', SearchableMixin.before_commit) # pylint: disable=maybe-no-member
+db.event.listen(db.session, 'after_commit', SearchableMixin.after_commit) # pylint: disable=maybe-no-member
 
 
 @loginm.user_loader
@@ -58,12 +58,12 @@ def load_user(id):  # pylint: disable=redefined-builtin
 
 
 class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), index=True)
-    username = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
-    posts = db.relationship('Borrower', backref='author', lazy='dynamic')
+    id = db.Column(db.Integer, primary_key=True) # pylint: disable=maybe-no-member
+    name = db.Column(db.String(120), index=True) # pylint: disable=maybe-no-member
+    username = db.Column(db.String(64), index=True, unique=True) # pylint: disable=maybe-no-member
+    email = db.Column(db.String(120), index=True, unique=True) # pylint: disable=maybe-no-member
+    password_hash = db.Column(db.String(128)) # pylint: disable=maybe-no-member
+    posts = db.relationship('Borrower', backref='author', lazy='dynamic') # pylint: disable=maybe-no-member
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -98,24 +98,29 @@ class User(UserMixin, db.Model):
         return User.query.get(id)
 
 
-class Borrower(SearchableMixin, db.Model):
-    __searchable__ = ['clientname', 'clientemail', 'clientphone',
-                      'clientaddress', 'clientcity', 'clientzip', 'clientinfo']
-    id = db.Column(db.Integer, primary_key=True)
-    clientname = db.Column(db.String(64), index=True)
-    clientemail = db.Column(db.String(128), index=True, unique=True)
-    clientphone = db.Column(db.String(24), index=True)
-    clientaddress = db.Column(db.String(100), index=True)
-    clientcity = db.Column(db.String(32), index=True)
-    clientzip = db.Column(db.String(8), index=True)
-    clientinfo = db.Column(db.Text)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    # def __repr__(self):
-    #    return '{}'.format(self.clientname, self.clientss,
-    #                       self.clientemail, self.clientphone,
-    #                       self.clientaddress, self.clientcity,
-    #                       self.clientzip, self.clientinfo)
+class Post(SearchableMixin, db.Model):
+    __searchable__ = ['id', 'body', 'timestamp', 'user_id']
+    id = db.Column(db.Integer, primary_key=True) # pylint: disable=maybe-no-member
+    body = db.Column(db.String(140)) # pylint: disable=maybe-no-member
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow) # pylint: disable=maybe-no-member
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # pylint: disable=maybe-no-member
+ # pylint: disable=maybe-no-member
     def __repr__(self):
-        return '<Borrower {}>'.format(self.clientname)
+        return '<Post {}>'.format(self.body)
+
+
+
+class Recipe(SearchableMixin, db.Model):
+    __searchable__ = ['id', 'body', 'timestamp', 'user_id']
+    id = db.Column(db.Integer, primary_key=True) # pylint: disable=maybe-no-member
+    body = db.Column(db.String(140)) # pylint: disable=maybe-no-member
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow) # pylint: disable=maybe-no-member
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # pylint: disable=maybe-no-member
+    ibu = db.Column(db.Integer(3)) # pylint: disable=maybe-no-member
+    sg = db.Column(db.Integer(6)) # pylint: disable=maybe-no-member
+    fg = db.Column(db.Integer(6)) # pylint: disable=maybe-no-member
+    ebc = db.Column(db.String(4)) # pylint: disable=maybe-no-member
+    abv = db.Column(db.String(4)) # pylint: disable=maybe-no-member
+
+    def __repr__(self):
+        return '<Post {}>'.format(self.body)

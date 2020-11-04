@@ -1,7 +1,7 @@
 from app import db
 from app.main import bp
-from app.main.forms import BorrowForm
-from app.models import User, Borrower
+from app.main.forms import PostForm
+from app.models import User, Post
 from app.main.forms import SearchForm
 from flask import request, render_template, flash, redirect, \
     url_for, current_app, g
@@ -34,11 +34,11 @@ def index():
 @bp.route('/add', methods=['GET', 'POST'])
 @login_required
 def add():
-    form = BorrowForm()
+    form = PostForm()
     if form.validate_on_submit():
         if form.submit.data:
-            post = Borrower(clientname=form.clientname.data,
-                            clientss=form.clientss.data,
+            post = Post(clientname=form.clientname.data,
+                            clientss=form.clientss.data, # pylint: disable=maybe-no-member
                             clientemail=form.clientemail.data,
                             clientphone=form.clientphone.data,
                             clientaddress=form.clientaddress.data,
@@ -46,24 +46,24 @@ def add():
                             clientcity=form.clientcity.data,
                             clientinfo=form.clientinfo.data,
                             author=current_user)
-            db.session.add(post)
-            db.session.commit()
-            flash('Client data successfully added!')
+            db.session.add(post) # pylint: disable=maybe-no-member
+            db.session.commit() # pylint: disable=maybe-no-member
+            flash('Post successfully added!')
             return redirect(url_for('main.add'))
         else:
             return redirect(url_for('main.index'))
-    return render_template('add.html', title='Add Borrower', form=form)
+    return render_template('add.html', title='Add Post', form=form)
 
 
 @bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):  # pylint: disable=redefined-builtin
-    qry = Borrower.query.filter_by(id=id).first()
-    form = BorrowForm(request.form, obj=qry)
+    qry = Post.query.filter_by(id=id).first()
+    form = PostForm(request.form, obj=qry)
     if form.validate_on_submit():
         if form.submit.data:
-            form.populate_obj(qry)
-            db.session.commit()
+            form.populate_obj(qry) # pylint: disable=maybe-no-member
+            db.session.commit() # pylint: disable=maybe-no-member
             flash('Your changes have been saved.')
             return redirect(url_for('main.index', id=id))
         else:
@@ -75,10 +75,10 @@ def edit(id):  # pylint: disable=redefined-builtin
 @bp.route('/delete/<int:id>', methods=['GET', 'POST'])
 @login_required
 def delete(id):  # pylint: disable=redefined-builtin
-    qry = Borrower.query.filter_by(id=id).first()
-    db.session.delete(qry)
-    db.session.commit()
-    flash('Borrower successfully deleted!')
+    qry = Post.query.filter_by(id=id).first() # pylint: disable=maybe-no-member
+    db.session.delete(qry) # pylint: disable=maybe-no-member
+    db.session.commit() # pylint: disable=maybe-no-member
+    flash('Post successfully deleted!')
     return redirect(url_for('main.index'))
 
 
@@ -87,7 +87,7 @@ def delete(id):  # pylint: disable=redefined-builtin
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
-    posts = user.posts.order_by(Borrower.timestamp.desc()).paginate(
+    posts = user.posts.order_by(Post.timestamp.desc()).paginate(
         page, current_app.config['POSTS_PER_PAGE'], False)
     next_url = url_for('main.user', username=user.username,
                        page=posts.next_num) \
@@ -105,7 +105,7 @@ def search():
     if not g.search_form.validate():
         return redirect(url_for('main.index'))
     page = request.args.get('page', 1, type=int)
-    posts, total = Borrower.search(g.search_form.q.data, page,
+    posts, total = Post.search(g.search_form.q.data, page,
                                    current_app.config['POSTS_PER_PAGE'])
     next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
         if total > page * current_app.config['POSTS_PER_PAGE'] else None

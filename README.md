@@ -1,3 +1,3 @@
-# Saloon
+# The Doom Saloon - Homebrew
 
-Beer site with calculators
+Info Beer site with calculators
